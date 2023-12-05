@@ -1,3 +1,11 @@
+/** @type {"test" | "prod" | null} */
+let currentEnv = null;
+
+/**
+ * @param {"test" | "prod" | null} env
+ */
+export const envIs = (env) => currentEnv === env;
+
 /**
  * @param {unknown} value
  */
@@ -22,6 +30,11 @@ export const safeSplit = (string, separator) => {
   const regex = new RegExp(`\\s*${separator}\\s*`, "g");
   return String(string || "").split(regex);
 };
+
+/**
+ * @param {"test" | "prod" | null} env
+ */
+export const setEnv = (env) => (currentEnv = env);
 
 // Console colors
 

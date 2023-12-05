@@ -5,7 +5,8 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "node ."
+    "start": "node .",
+    "heavy-start": "node --max-old-space-size=8192 ."
   },
   "author": "",
   "type": "module"

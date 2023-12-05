@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { green, isNil, magenta, parseInput, red } from "./utils.js";
+import { green, isNil, magenta, parseInput, red, setEnv } from "./utils.js";
 
 const day = parseInt(process.argv[3], 10) || new Date().getDate();
 const year = new Date().getFullYear();
@@ -35,16 +35,22 @@ const expected = isNil(EXPECTED1)
 const prodInputs = parseInput(isNil(PROD1) ? [PROD, PROD] : [PROD1, PROD2]);
 const testInputs = parseInput(isNil(TEST1) ? [TEST, TEST] : [TEST1, TEST2]);
 
+console.log(`${year}: day ${magenta(day)} / part ${magenta(1)}:`);
+setEnv("test");
 const testResult1 = await part1(testInputs[0]);
 const log1 = expected[0] === testResult1 ? console.log : console.error;
 const col1 = expected[0] === testResult1 ? green : red;
-log1(`${year}: day ${magenta(day)} / part ${magenta(1)}:`);
 log1(`• [TEST] (expects: ${col1(expected[0])}) ${col1(testResult1)}`);
+setEnv("prod");
 log1(`• [PROD] ${col1(await part1(prodInputs[0]))}`);
+setEnv(null);
 
+console.log(`${year}: day ${magenta(day)} / part ${magenta(2)}:`);
+setEnv("test");
 const testResult2 = await part2(testInputs[1]);
 const log2 = expected[1] === testResult2 ? console.log : console.error;
 const col2 = expected[1] === testResult2 ? green : red;
-log2(`${year}: day ${magenta(day)} / part ${magenta(2)}:`);
 log2(`• [TEST] (expects: ${col2(expected[1])}) ${col2(testResult2)}`);
+setEnv("prod");
 log1(`• [PROD] ${col2(await part2(prodInputs[1]))}`);
+setEnv(null);

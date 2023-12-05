@@ -8,7 +8,7 @@ export const EXPECTED2 = 0;
 /**
  * @param {string[]} lines
  */
-export const part1 = (lines) => {
+export const part1 = async (lines) => {
   let answer = 0;
   for (const line of lines) {
     console.log(line);
@@ -20,7 +20,7 @@ export const part1 = (lines) => {
 /**
  * @param {string[]} lines
  */
-export const part2 = (lines) => {
+export const part2 = async (lines) => {
   let answer = 0;
   for (const line of lines) {
     console.log(line);
