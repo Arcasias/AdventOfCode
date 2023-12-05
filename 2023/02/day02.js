@@ -18,8 +18,7 @@ const CONSTRAINTS = { red: 12, green: 13, blue: 14 };
  * @param {string[]} lines
  */
 export const partOne = async (lines) => {
-  let answer = 0;
-  for (const line of lines) {
+  return lines.reduce((acc, line) => {
     const [, id, strSets] = line.match(/game\s+(\d+)\s*:\s*(.*)/i) || [];
     const maxValues = { ...DEFAULT_VALUES };
     for (const strSet of strSets.split(/\s*;\s*/g)) {
@@ -30,23 +29,22 @@ export const partOne = async (lines) => {
     }
 
     if (
-      Object.entries(maxValues).every(
-        ([color, value]) => value <= CONSTRAINTS[color]
+      Object.entries(maxValues).some(
+        ([color, value]) => value > CONSTRAINTS[color]
       )
     ) {
-      answer += Number(id);
+      return acc;
     }
-  }
 
-  return answer;
+    return acc + Number(id);
+  }, 0);
 };
 
 /**
  * @param {string[]} lines
  */
 export const partTwo = async (lines) => {
-  let answer = 0;
-  for (const line of lines) {
+  return lines.reduce((acc, line) => {
     const [, strSets] = line.match(/game\s+\d+\s*:\s*(.*)/i) || [];
     const maxValues = { ...DEFAULT_VALUES };
     for (const strSet of safeSplit(strSets, ";")) {
@@ -57,9 +55,6 @@ export const partTwo = async (lines) => {
     }
 
     const values = Object.values(maxValues).filter(Boolean);
-    const power = values.reduce((a, b) => a * b, 1);
-    answer += power;
-  }
-
-  return answer;
+    return acc + values.reduce((a, b) => a * b, 1);
+  }, 0);
 };

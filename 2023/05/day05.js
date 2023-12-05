@@ -69,13 +69,13 @@ const parseSteps = (lines) => {
   for (const line of lines) {
     if (/[a-z]/i.test(line)) {
       currentName = line;
-      steps[line] = [];
+      steps[currentName] = [];
     } else {
-      const step = new Uint32Array(safeSplit(line, " ").map(Number));
-      steps[currentName].push(step);
+      steps[currentName].push(
+        new Uint32Array(safeSplit(line, " ").map(Number))
+      );
     }
   }
-
   return Object.values(steps).map((specs) => specs.sort((a, b) => a[0] - b[0]));
 };
 

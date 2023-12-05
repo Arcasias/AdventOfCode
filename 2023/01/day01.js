@@ -17,20 +17,6 @@ zoneight234
 ];
 export const EXPECTED = [142, 281];
 
-/**
- * @param {string[]} targets
- * @param {string} line
- * @param {number} i
- */
-const findTarget = (targets, line, i) => {
-  for (const target of targets) {
-    if (target === line.slice(i, i + target.length)) {
-      return NUMBERS.indexOf(target);
-    }
-  }
-  return null;
-};
-
 const NUMBERS = [
   "zero",
   "one",
@@ -50,18 +36,17 @@ const NUMBERS = [
 export const partOne = async (lines) => {
   return lines.reduce((acc, line) => {
     const numbers = [];
-    for (let i = 0; i < line.length; i++) {
-      const num = Number(line[i]);
-      if (!isNaN(num)) {
-        numbers.push(num);
+    for (const char of line) {
+      const number = Number(char);
+      if (!isNaN(number)) {
+        numbers.push(number);
       }
     }
-    if (numbers.length) {
-      const numberStr = numbers.join("");
-      return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
-    } else {
+    if (!numbers.length) {
       return acc;
     }
+    const numberStr = numbers.join("");
+    return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
   }, 0);
 };
 
@@ -73,24 +58,22 @@ export const partTwo = async (lines) => {
     const numbers = [];
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      const targets = NUMBERS.filter((num) => num[0] === char);
-      if (targets.length) {
-        const target = findTarget(targets, line, i);
-        if (target) {
-          numbers.push(target);
-        }
+      const numberIndex = NUMBERS.findIndex(
+        (n) => n === line.slice(i, i + n.length)
+      );
+      if (numberIndex >= 0) {
+        numbers.push(numberIndex);
       } else {
-        const num = parseInt(char, 10);
-        if (!isNaN(num)) {
-          numbers.push(num);
+        const number = Number(char);
+        if (!isNaN(number)) {
+          numbers.push(number);
         }
       }
     }
-    if (numbers.length) {
-      const numberStr = numbers.join("");
-      return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
-    } else {
+    if (!numbers.length) {
       return acc;
     }
+    const numberStr = numbers.join("");
+    return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
   }, 0);
 };

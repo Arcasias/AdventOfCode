@@ -26,7 +26,7 @@ const execPart = async (index, solver) => {
     `• [TEST] (expects: ${color(expected[index])}) ${color(exampleResult)}`
   );
   setEnv("prod");
-  logFn(`• [PROD] ${color(await solver(input))}`);
+  logFn(`• [PROD] ${color(await solver([...input]))}`);
   setEnv(null);
 };
 
