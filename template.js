@@ -1,30 +1,21 @@
-export const TEST = `
+export const EXAMPLE = `
 `;
-export const PROD = `
-`;
-export const EXPECTED1 = 0;
-export const EXPECTED2 = 0;
+export const EXPECTED = [0, 0];
 
 /**
  * @param {string[]} lines
  */
-export const part1 = async (lines) => {
-  let answer = 0;
-  for (const line of lines) {
-    console.log(line);
-  }
-
-  return answer;
+export const partOne = async (lines) => {
+  return lines.reduce((acc, line) => {
+    return acc;
+  }, 0);
 };
 
 /**
  * @param {string[]} lines
  */
-export const part2 = async (lines) => {
-  let answer = 0;
-  for (const line of lines) {
-    console.log(line);
-  }
-
-  return answer;
+export const partTwo = async (lines) => {
+  return lines.reduce((acc, line) => {
+    return acc;
+  }, 0);
 };

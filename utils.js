@@ -7,20 +7,39 @@ let currentEnv = null;
 export const envIs = (env) => currentEnv === env;
 
 /**
+ * @param {string} url
+ */
+export const fetchText = async (url) => {
+  const response = await fetch(url);
+  return response.text();
+};
+
+/**
+ * @param {any} value
+ */
+export const isIterable = (value) =>
+  value &&
+  typeof value === "object" &&
+  typeof value[Symbol.iterator] === "function";
+
+/**
  * @param {unknown} value
  */
 export const isNil = (value) => value === undefined || value === null;
 
 /**
+ * @param {string} input
+ */
+export const parseInput = (input) =>
+  input
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+/**
  * @param {[string, string]} inputs
  */
-export const parseInput = (inputs) =>
-  inputs.map((input) =>
-    input
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-  );
+export const parseInputs = (inputs) => inputs.map(parseInput);
 
 /**
  * @param {unknown} string

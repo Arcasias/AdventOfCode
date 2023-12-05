@@ -1,56 +1,72 @@
 import { existsSync } from "fs";
-import { readFile, writeFile } from "fs/promises";
-import { green, isNil, magenta, parseInput, red, setEnv } from "./utils.js";
+import { mkdir, readFile, writeFile } from "fs/promises";
+import {
+  green,
+  isIterable,
+  magenta,
+  parseInput,
+  parseInputs,
+  red,
+  setEnv,
+} from "./utils.js";
 
-const day = parseInt(process.argv[3], 10) || new Date().getDate();
-const year = new Date().getFullYear();
-const fileName = `day${String(day).padStart(2, "0")}`;
-const filePath = `./${year}/${fileName}.js`;
+/**
+ * @param {number} index
+ * @param {(lines: string[]) => Promise<number>} solver
+ */
+const execPart = async (index, solver) => {
+  console.log(`${YEAR}: day ${magenta(DAY)} / part ${magenta(index + 1)}:`);
+  setEnv("test");
+  const exampleResult = await solver(exampleInputs[index]);
+  const [logFn, color] =
+    expected[index] === exampleResult
+      ? [console.log, green]
+      : [console.error, red];
+  logFn(
+    `• [TEST] (expects: ${color(expected[index])}) ${color(exampleResult)}`
+  );
+  setEnv("prod");
+  logFn(`• [PROD] ${color(await solver(input))}`);
+  setEnv(null);
+};
 
-if (!existsSync(filePath)) {
-  const template = await readFile("./template.js", "utf-8");
-  await writeFile(filePath, template, "utf-8");
+const arg = process.argv[3];
+const now = new Date();
 
-  console.log(`Creating file ${fileName}`);
+const DAY = String(parseInt(arg, 10) || now.getDate()).padStart(2, "0");
+const YEAR = String(now.getFullYear());
+
+const DIR = `./${YEAR}/${DAY}/`;
+const SCRIPT_NAME = `day${DAY}`;
+const SCRIPT_PATH = `${DIR}${SCRIPT_NAME}.js`;
+const INPUT_PATH = `${DIR}input.txt`;
+
+// If no dir for today: create it & exit process
+if (!existsSync(DIR)) {
+  const [template] = await Promise.all([
+    readFile("./template.js", "utf-8"),
+    mkdir(DIR),
+  ]);
+  await Promise.all([
+    writeFile(SCRIPT_PATH, template, "utf-8"),
+    writeFile(INPUT_PATH, "", "utf-8"),
+  ]);
+
+  console.log(`Creating directory ${SCRIPT_NAME}`);
   process.exit(0);
 }
 
-const {
-  EXPECTED,
-  EXPECTED1,
-  EXPECTED2,
-  PROD,
-  PROD1,
-  PROD2,
-  TEST,
-  TEST1,
-  TEST2,
-  part1,
-  part2,
-} = await import(filePath);
+// Import input & script
+const [{ EXPECTED, EXAMPLE, partOne, partTwo }, rawInput] = await Promise.all([
+  import(SCRIPT_PATH),
+  readFile(INPUT_PATH, "utf-8"),
+]);
 
-const expected = isNil(EXPECTED1)
-  ? [EXPECTED, EXPECTED]
-  : [EXPECTED1, EXPECTED2];
-const prodInputs = parseInput(isNil(PROD1) ? [PROD, PROD] : [PROD1, PROD2]);
-const testInputs = parseInput(isNil(TEST1) ? [TEST, TEST] : [TEST1, TEST2]);
+const expected = isIterable(EXPECTED) ? EXPECTED : [EXPECTED, EXPECTED];
+const input = parseInput(rawInput);
+const exampleInputs = parseInputs(
+  isIterable(EXAMPLE) ? EXAMPLE : [EXAMPLE, EXAMPLE]
+);
 
-console.log(`${year}: day ${magenta(day)} / part ${magenta(1)}:`);
-setEnv("test");
-const testResult1 = await part1(testInputs[0]);
-const log1 = expected[0] === testResult1 ? console.log : console.error;
-const col1 = expected[0] === testResult1 ? green : red;
-log1(`• [TEST] (expects: ${col1(expected[0])}) ${col1(testResult1)}`);
-setEnv("prod");
-log1(`• [PROD] ${col1(await part1(prodInputs[0]))}`);
-setEnv(null);
-
-console.log(`${year}: day ${magenta(day)} / part ${magenta(2)}:`);
-setEnv("test");
-const testResult2 = await part2(testInputs[1]);
-const log2 = expected[1] === testResult2 ? console.log : console.error;
-const col2 = expected[1] === testResult2 ? green : red;
-log2(`• [TEST] (expects: ${col2(expected[1])}) ${col2(testResult2)}`);
-setEnv("prod");
-log1(`• [PROD] ${col2(await part2(prodInputs[1]))}`);
-setEnv(null);
+await execPart(0, partOne);
+await execPart(1, partTwo);
