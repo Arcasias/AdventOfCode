@@ -1,4 +1,4 @@
-import { safeSplit, spawnWorkers } from "../../utils.js";
+import { getNumbers, spawnWorkers } from "../../utils.js";
 
 export const EXAMPLE = `
 seeds: 79 14 55 13
@@ -49,9 +49,7 @@ const parseSteps = (lines) => {
       currentName = line;
       steps[currentName] = [];
     } else {
-      steps[currentName].push(
-        new Uint32Array(safeSplit(line, " ").map(Number))
-      );
+      steps[currentName].push(new Uint32Array(getNumbers(line)));
     }
   }
   return Object.values(steps).map((specs) => specs.sort((a, b) => a[1] - b[1]));
@@ -67,7 +65,7 @@ const workers = spawnWorkers(WORKER_PATH, 8);
  */
 export const partOne = async (lines) => {
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
-  const seeds = new Uint32Array(safeSplit(strSeeds, " ").map(Number));
+  const seeds = new Uint32Array(getNumbers(strSeeds));
   const steps = parseSteps(lines);
   return workers.start({ seeds, steps });
 };
@@ -84,7 +82,7 @@ export const partTwo = async (lines) => {
   };
 
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
-  const flatSeedRanges = safeSplit(strSeeds, " ").map(Number);
+  const flatSeedRanges = getNumbers(strSeeds);
   const steps = parseSteps(lines);
 
   // Sort seed ranges

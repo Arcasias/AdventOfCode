@@ -17,6 +17,15 @@ export const fetchText = async (url) => {
 };
 
 /**
+ * @param {string} line
+ * @param {string | RegExp} [separator]
+ */
+export const getNumbers = (line, separator) =>
+  safeSplit(line, separator || /\s+/g)
+    .map(Number)
+    .filter((n) => !Number.isNaN(n));
+
+/**
  * @param {any} value
  */
 export const isIterable = (value) =>
@@ -45,10 +54,13 @@ export const parseInputs = (inputs) => inputs.map(parseInput);
 
 /**
  * @param {unknown} string
- * @param {string} separator
+ * @param {string | RegExp} separator
  */
 export const safeSplit = (string, separator) => {
-  const regex = new RegExp(`\\s*${separator}\\s*`, "g");
+  const regex =
+    separator instanceof RegExp
+      ? separator
+      : new RegExp(`\\s*${separator}\\s*`, "g");
   return String(string || "").split(regex);
 };
 

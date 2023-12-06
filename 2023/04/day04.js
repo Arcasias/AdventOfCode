@@ -1,3 +1,5 @@
+import { getNumbers } from "../../utils.js";
+
 export const EXAMPLE = `
 Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
 Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
@@ -15,8 +17,8 @@ export const partOne = async (lines) => {
   let answer = 0;
   for (const line of lines) {
     const match = line.match(/^card\s+\d+:\s*(.*)\s*\|\s*(.*)$/i) || [];
-    const winning = new Set(match[1].split(/\s+/g).map(Number));
-    const actual = new Set(match[2].split(/\s+/g).map(Number));
+    const winning = new Set(getNumbers(match[1]));
+    const actual = new Set(getNumbers(match[2]));
 
     let score = 0;
     for (const number of actual) {
@@ -41,8 +43,8 @@ export const partTwo = async (lines) => {
   const cards = [];
   for (const line of lines) {
     const match = line.match(/^card\s+\d+:\s*(.*)\s*\|\s*(.*)$/i) || [];
-    const winning = new Set(match[1].split(/\s+/g).map(Number));
-    const actual = new Set(match[2].split(/\s+/g).map(Number));
+    const winning = new Set(getNumbers(match[1]));
+    const actual = new Set(getNumbers(match[2]));
     const matching = new Set([...actual].filter((x) => winning.has(x))).size;
 
     cards.push([1, matching]);
