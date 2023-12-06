@@ -1,5 +1,4 @@
-import { Worker } from "worker_threads";
-import { safeSplit } from "../../utils.js";
+import { safeSplit, spawnWorkers } from "../../utils.js";
 
 export const EXAMPLE = `
 seeds: 79 14 55 13
@@ -39,27 +38,6 @@ humidity-to-location map:
 export const EXPECTED = [35, 46];
 
 /**
- * @param {Uint32Array} seeds
- * @param {Uint32Array[][]} steps
- */
-const solveChunk = (seeds, steps) => {
-  return new Promise((resolve) => {
-    const worker = new Worker(new URL("./day05.worker.js", import.meta.url));
-    worker.on("message", (result) => {
-      worker.terminate();
-      console.log(
-        `${new Date().toISOString().split("Z")[0]} solved chunk (size: ${
-          seeds.length
-        }):`,
-        result
-      );
-      resolve(result);
-    });
-    worker.postMessage({ seeds, steps });
-  });
-};
-
-/**
  * @param {string[]} lines
  */
 const parseSteps = (lines) => {
@@ -76,10 +54,13 @@ const parseSteps = (lines) => {
       );
     }
   }
-  return Object.values(steps).map((specs) => specs.sort((a, b) => a[0] - b[0]));
+  return Object.values(steps).map((specs) => specs.sort((a, b) => a[1] - b[1]));
 };
 
-const MAX_CHUNK_SIZE = 10_000_000;
+const MAX_CHUNK_SIZE = 100_000_000;
+const WORKER_PATH = new URL("./day05.worker.js", import.meta.url);
+
+const workers = spawnWorkers(WORKER_PATH, 8);
 
 /**
  * @param {string[]} lines
@@ -88,39 +69,51 @@ export const partOne = async (lines) => {
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
   const seeds = new Uint32Array(safeSplit(strSeeds, " ").map(Number));
   const steps = parseSteps(lines);
-  return solveChunk(seeds, steps);
+  return workers.start({ seeds, steps });
 };
 
 /**
  * @param {string[]} lines
  */
 export const partTwo = async (lines) => {
+  const solveCurrentSeeds = async () => {
+    const result = await workers.start({ seeds: currentSeeds, steps });
+    if (result < min) {
+      min = result;
+    }
+  };
+
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
-  const seedSpecs = safeSplit(strSeeds, " ").map(Number);
+  const flatSeedRanges = safeSplit(strSeeds, " ").map(Number);
   const steps = parseSteps(lines);
 
-  const currentChunk = new Uint32Array(MAX_CHUNK_SIZE);
-  let chunkIndex = 0;
+  // Sort seed ranges
+  const seedRanges = [];
+  for (let i = 0; i < flatSeedRanges.length; i++) {
+    seedRanges.push([flatSeedRanges[i], flatSeedRanges[++i] || 0]);
+  }
+  seedRanges.sort((a, b) => a[0] - b[0]);
+
+  // Start processing seeds
+  const currentSeeds = new Uint32Array(MAX_CHUNK_SIZE);
+  let cursor = 0;
   let min = Infinity;
-  for (let i = 0; i < seedSpecs.length; i++) {
-    const start = seedSpecs[i];
-    const length = seedSpecs[++i] || 0;
+  for (let i = 0; i < seedRanges.length; i++) {
+    const [start, length] = seedRanges[i];
     for (let j = 0; j < length; j++) {
-      currentChunk[chunkIndex++] = start + j;
-      if (chunkIndex >= MAX_CHUNK_SIZE) {
-        chunkIndex = 0;
-        const result = await solveChunk(currentChunk, steps);
-        if (result < min) {
-          min = result;
-        }
+      currentSeeds[cursor++] = start + j;
+      if (cursor >= MAX_CHUNK_SIZE) {
+        cursor = 0;
+        await workers.free();
+        solveCurrentSeeds();
       }
     }
-    console.log(`parsed seeds ${(i + 1) / 2}/${seedSpecs.length / 2}`);
+    console.log(`parsed seeds ${i + 1}/${seedRanges.length}`);
   }
 
-  const result = await solveChunk(currentChunk, steps);
-  if (result < min) {
-    min = result;
+  // Solve remaining seeds
+  if (cursor > 0) {
+    await workers.free().then(solveCurrentSeeds);
   }
 
   return min;

@@ -1,3 +1,5 @@
+import { Worker } from "worker_threads";
+
 /** @type {"test" | "prod" | null} */
 let currentEnv = null;
 
@@ -54,6 +56,42 @@ export const safeSplit = (string, separator) => {
  * @param {"test" | "prod" | null} env
  */
 export const setEnv = (env) => (currentEnv = env);
+
+/**
+ * @param {string | URL} url
+ * @param {number} amount
+ */
+export const spawnWorkers = (url, amount) => {
+  const free = () => Promise.race(jobs);
+
+  /**
+   * @template T, R
+   * @param {T} data
+   * @returns {Promise<R>}
+   */
+  const start = async (data) => {
+    const index = jobs.indexOf(null);
+    if (index < 0) {
+      throw new Error(`no free workers (${amount} total)`);
+    }
+    jobs[index] = new Promise((resolve) => {
+      console.debug(`starting worker ${index + 1}/${amount}`);
+      const worker = new Worker(url);
+      worker.on("message", (result) => {
+        worker.terminate();
+        jobs[index] = null;
+        resolve(result);
+      });
+      worker.postMessage(data);
+    });
+    return jobs[index];
+  };
+
+  /** @type {(Promise<any> | null)[]} */
+  const jobs = Array.from({ length: amount }, () => null);
+
+  return { free, start };
+};
 
 // Console colors
 

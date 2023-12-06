@@ -1,6 +1,12 @@
 import { parentPort } from "worker_threads";
 
-parentPort?.on("message", ({ seeds, steps }) => {
+/**
+ * @param {{
+ *  seeds: Uint32Array;
+ *  steps: Uint32Array[][];
+ * }} params
+ */
+const onMessage = ({ seeds, steps }) => {
   let min = Infinity;
   for (let i = 0; i < seeds.length; i++) {
     let value = seeds[i];
@@ -10,8 +16,9 @@ parentPort?.on("message", ({ seeds, steps }) => {
     for (let j = 0; j < steps.length; j++) {
       const step = steps[j];
       for (let k = 0; k < step.length; k++) {
-        if (value >= step[k][1] && value < step[k][1] + step[k][2]) {
-          value = step[k][0] + (value - step[k][1]);
+        const stepRange = step[k];
+        if (value >= stepRange[1] && value < stepRange[1] + stepRange[2]) {
+          value = stepRange[0] + (value - stepRange[1]);
           break;
         }
       }
@@ -22,4 +29,6 @@ parentPort?.on("message", ({ seeds, steps }) => {
   }
 
   parentPort?.postMessage(min);
-});
+};
+
+parentPort?.on("message", onMessage);
