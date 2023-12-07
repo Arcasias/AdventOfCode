@@ -17,36 +17,13 @@ zoneight234
 ];
 export const EXPECTED = [142, 281];
 
-const NUMBERS = [
-  "zero",
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-];
-
 /**
  * @param {string[]} lines
  */
 export const partOne = async (lines) => {
   return lines.reduce((acc, line) => {
-    const numbers = [];
-    for (const char of line) {
-      const number = Number(char);
-      if (!isNaN(number)) {
-        numbers.push(number);
-      }
-    }
-    if (!numbers.length) {
-      return acc;
-    }
-    const numberStr = numbers.join("");
-    return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
+    const numbers = line.replace(/\D+/g, "");
+    return numbers ? acc + Number(numbers[0] + numbers.at(-1)) : acc;
   }, 0);
 };
 
@@ -54,26 +31,20 @@ export const partOne = async (lines) => {
  * @param {string[]} lines
  */
 export const partTwo = async (lines) => {
+  const NUMBER_NAMES =
+    "zero,one,two,three,four,five,six,seven,eight,nine".split(",");
   return lines.reduce((acc, line) => {
-    const numbers = [];
+    let numbers = "";
     for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const numberIndex = NUMBERS.findIndex(
+      const index = NUMBER_NAMES.findIndex(
         (n) => n === line.slice(i, i + n.length)
       );
-      if (numberIndex >= 0) {
-        numbers.push(numberIndex);
-      } else {
-        const number = Number(char);
-        if (!isNaN(number)) {
-          numbers.push(number);
-        }
+      if (index > -1) {
+        numbers += index;
+      } else if (!isNaN(+line[i])) {
+        numbers += line[i];
       }
     }
-    if (!numbers.length) {
-      return acc;
-    }
-    const numberStr = numbers.join("");
-    return acc + Number(`${numberStr[0]}${numberStr.at(-1)}`);
+    return numbers ? acc + Number(numbers[0] + numbers.at(-1)) : acc;
   }, 0);
 };
