@@ -21,9 +21,9 @@ export const partOne = async (lines) => {
   return lines.reduce((acc, line) => {
     const [, id, strSets] = line.match(/game\s+(\d+)\s*:\s*(.*)/i) || [];
     const maxValues = { ...DEFAULT_VALUES };
-    for (const strSet of strSets.split(/\s*;\s*/g)) {
-      for (const strValue of strSet.split(/\s*,\s*/g)) {
-        const [count, color] = strValue.split(/\s+/g);
+    for (const strSet of safeSplit(strSets, ";")) {
+      for (const strValue of safeSplit(strSet, ",")) {
+        const [count, color] = safeSplit(strValue, " ");
         maxValues[color] = Math.max(maxValues[color], Number(count));
       }
     }

@@ -36,7 +36,7 @@ export const partOne = async ([timeLine, distanceLine]) => {
  */
 export const partTwo = async ([timeLine, distanceLine]) => {
   return findChoices(
-    Number(timeLine.replace(/[^\d]+/g, "")),
-    Number(distanceLine.replace(/[^\d]+/g, ""))
+    Number(timeLine.replace(/\D+/g, "")),
+    Number(distanceLine.replace(/\D+/g, ""))
   );
 };

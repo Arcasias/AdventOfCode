@@ -68,5 +68,7 @@ const exampleInputs = parseInputs(
   isIterable(EXAMPLE) ? EXAMPLE : [EXAMPLE, EXAMPLE]
 );
 
+console.time("solved in");
 await execPart(0, partOne);
 await execPart(1, partTwo);
+console.timeEnd("solved in");
