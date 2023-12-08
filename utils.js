@@ -17,6 +17,13 @@ export const fetchText = async (url) => {
 };
 
 /**
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+export const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+
+/**
  * @param {string} line
  * @param {string | RegExp} [separator]
  */
@@ -37,6 +44,12 @@ export const isIterable = (value) =>
  * @param {unknown} value
  */
 export const isNil = (value) => value === undefined || value === null;
+
+/**
+ * @param {number} a
+ * @param {number} b
+ */
+export const lcm = (a, b) => (a * b) / gcd(a, b);
 
 /**
  * @param {string} input
