@@ -17,6 +17,13 @@ export const fetchText = async (url) => {
 };
 
 /**
+ * @template T
+ * @param {T[] | null | undefined} list
+ * @param {T} defaultValue
+ */
+export const first = (list, defaultValue) => list?.[0] ?? defaultValue;
+
+/**
  * @param {number} a
  * @param {number} b
  * @returns {number}
@@ -44,6 +51,13 @@ export const isIterable = (value) =>
  * @param {unknown} value
  */
 export const isNil = (value) => value === undefined || value === null;
+
+/**
+ * @template T
+ * @param {T[] | null | undefined} list
+ * @param {T} defaultValue
+ */
+export const last = (list, defaultValue) => list?.at(-1) ?? defaultValue;
 
 /**
  * @param {number} a
