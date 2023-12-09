@@ -1,4 +1,4 @@
-import { getNumbers, spawnWorkers } from "../../utils.js";
+import { getNumbers } from "../../utils.js";
 
 export const EXAMPLE = `
 seeds: 79 14 55 13
@@ -41,7 +41,7 @@ export const EXPECTED = [35, 46];
  * @param {string[]} lines
  */
 const parseSteps = (lines) => {
-  /** @type {Record<string, Uint32Array[]>} */
+  /** @type {Record<string, number[][]>} */
   const steps = {};
   let currentName = "";
   for (const line of lines) {
@@ -49,70 +49,92 @@ const parseSteps = (lines) => {
       currentName = line;
       steps[currentName] = [];
     } else {
-      steps[currentName].push(new Uint32Array(getNumbers(line)));
+      const [target, source, length] = getNumbers(line);
+      steps[currentName].push([target, source, source + length - 1]);
     }
   }
-  return Object.values(steps).map((specs) => specs.sort((a, b) => a[1] - b[1]));
+  return Object.values(steps).map((step) => step.sort((a, b) => a[1] - b[1]));
 };
 
-const MAX_CHUNK_SIZE = 100_000_000;
-const WORKER_PATH = new URL("./day05.worker.js", import.meta.url);
+/**
+ * @param {number[][]} ranges
+ * @param {ReturnType<typeof parseSteps>} steps
+ */
+const solveSteps = (ranges, steps) => {
+  /** @type {number[][]} */
+  let input = [];
+  let min = Infinity;
+  let output = ranges;
+  for (const stepRange of steps) {
+    input = output;
+    output = [];
+    while (input.length) {
+      let [seedStart, seedLength] = input.shift() || [];
+      for (const [targetStart, sourceStart, sourceEnd] of stepRange) {
+        let seedEnd = seedStart + seedLength - 1;
+        if (seedEnd < sourceStart) {
+          break;
+        }
 
-const workers = spawnWorkers(WORKER_PATH, 8);
+        if (sourceEnd < seedEnd) {
+          // seed end is after range
+          if (sourceEnd < seedStart) {
+            // seed start is also after range: hand off to next iteration
+            continue;
+          } else {
+            // seed start is before|in range: send excess to next iteration
+            const outputLength = seedEnd - sourceEnd;
+            input.unshift([sourceEnd + 1, outputLength]); // after range
+            seedLength -= outputLength;
+            seedEnd = sourceEnd;
+          }
+        }
+        if (sourceStart <= seedStart) {
+          // both seed start and seed end are in range
+          output.push([seedStart + (targetStart - sourceStart), seedLength]); // in range
+          seedLength = 0;
+        } else {
+          // only seed end is in range
+          const outputLength = seedEnd - sourceStart + 1;
+          output.push(
+            [seedStart, sourceStart - seedStart], // before range
+            [targetStart, outputLength] // in range
+          );
+          seedLength = 0;
+        }
+        break;
+      }
+      if (seedLength) {
+        output.push([seedStart, seedLength]);
+      }
+    }
+  }
+  for (const range of output) {
+    min = Math.min(min, range[0]);
+  }
+  return min;
+};
 
 /**
  * @param {string[]} lines
  */
 export const partOne = async (lines) => {
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
-  const seeds = new Uint32Array(getNumbers(strSeeds));
+  const seedRanges = getNumbers(strSeeds).map((seed) => [seed, 1]);
   const steps = parseSteps(lines);
-  return workers.start({ seeds, steps });
+  return solveSteps(seedRanges, steps);
 };
 
 /**
  * @param {string[]} lines
  */
 export const partTwo = async (lines) => {
-  const solveCurrentSeeds = async () => {
-    const result = await workers.start({ seeds: currentSeeds, steps });
-    if (result < min) {
-      min = result;
-    }
-  };
-
   const [, strSeeds] = (lines.shift() || "").match(/seeds:\s*(.*)/i) || [];
   const flatSeedRanges = getNumbers(strSeeds);
   const steps = parseSteps(lines);
-
-  // Sort seed ranges
   const seedRanges = [];
   for (let i = 0; i < flatSeedRanges.length; i++) {
     seedRanges.push([flatSeedRanges[i], flatSeedRanges[++i] || 0]);
   }
-  seedRanges.sort((a, b) => a[0] - b[0]);
-
-  // Start processing seeds
-  const currentSeeds = new Uint32Array(MAX_CHUNK_SIZE);
-  let cursor = 0;
-  let min = Infinity;
-  for (let i = 0; i < seedRanges.length; i++) {
-    const [start, length] = seedRanges[i];
-    for (let j = 0; j < length; j++) {
-      currentSeeds[cursor++] = start + j;
-      if (cursor >= MAX_CHUNK_SIZE) {
-        cursor = 0;
-        await workers.free();
-        solveCurrentSeeds();
-      }
-    }
-    console.log(`parsed seeds ${i + 1}/${seedRanges.length}`);
-  }
-
-  // Solve remaining seeds
-  if (cursor > 0) {
-    await workers.free().then(solveCurrentSeeds);
-  }
-
-  return min;
+  return solveSteps(seedRanges, steps);
 };
