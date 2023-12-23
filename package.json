@@ -9,5 +9,11 @@
     "heavy-start": "node --max-old-space-size=8192 ."
   },
   "author": "",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
 }
